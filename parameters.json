@@ -1,65 +1,164 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": "centralindia"
+            "type": "string"
         },
         "resourceGroup": {
-            "value": "piyush-rg"
+            "type": "string"
         },
         "azureFirewallName": {
-            "value": "test"
+            "type": "string"
         },
         "azureFirewallTier": {
-            "value": "Basic"
+            "type": "string"
         },
         "vnetName": {
-            "value": "test"
+            "type": "string"
         },
         "vnetAddressSpace": {
-            "value": "10.0.0.0/16"
+            "type": "string"
         },
         "vnetAddressSpaceV6": {
-            "value": ""
+            "type": "string"
         },
         "subnetAddressSpace": {
-            "value": "10.0.0.0/24"
+            "type": "string"
         },
         "subnetAddressSpaceV6": {
-            "value": ""
-        },
-        "azureFirewallManagementSubnet": {
-            "value": "AzureFirewallManagementSubnet"
-        },
-        "tunnelingSubnetAddressSpace": {
-            "value": "10.0.1.0/24"
+            "type": "string"
         },
         "zones": {
-            "value": [
-                "1",
-                "2",
-                "3"
-            ]
+            "type": "array"
+        },
+        "azureFirewallManagementSubnet": {
+            "type": "string"
+        },
+        "tunnelingSubnetAddressSpace": {
+            "type": "string"
         },
         "managementPublicIpAddressName": {
-            "value": "pip-test-fw-01"
+            "type": "string"
         },
         "managementPublicIpZones": {
-            "value": [
-                "1",
-                "2",
-                "3"
-            ]
-        },
-        "publicIpAddressName": {
-            "value": "test-pip-01"
+            "type": "array"
         },
         "publicIpAddressId": {
-            "value": "/subscriptions/0b1f7848-73ed-4735-80dd-f82f674f942d/resourceGroups/piyush-rg/providers/Microsoft.Network/publicIPAddresses/test-pip-01"
+            "type": "string"
+        },
+        "publicIpAddressName": {
+            "type": "string"
         },
         "publicIpV6AddressName": {
-            "value": "IpV6Conf"
+            "type": "string"
         }
-    }
+    },
+    "variables": {
+        "networkApiVersion": "?api-version=2019-09-01"
+    },
+    "resources": [
+        {
+            "apiVersion": "2020-08-01",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "name": "[parameters('managementPublicIpAddressName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "zones": "[parameters('managementPublicIpZones')]",
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            },
+            "tags": {}
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('vnetName')]",
+            "location": "[parameters('location')]",
+            "apiVersion": "2019-09-01",
+            "dependsOn": [],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('vnetAddressSpace')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "AzureFirewallSubnet",
+                        "properties": {
+                            "addressPrefixes": null,
+                            "addressPrefix": "[parameters('subnetAddressSpace')]"
+                        }
+                    },
+                    {
+                        "name": "AzureFirewallManagementSubnet",
+                        "properties": {
+                            "addressPrefix": "[parameters('tunnelingSubnetAddressSpace')]"
+                        }
+                    }
+                ]
+            },
+            "tags": {}
+        },
+        {
+            "apiVersion": "2022-07-01",
+            "type": "Microsoft.Network/firewallPolicies",
+            "resources": [],
+            "properties": {
+                "sku": {
+                    "tier": "Basic"
+                }
+            },
+            "name": "oo",
+            "location": "centralindia",
+            "tags": {}
+        },
+        {
+            "apiVersion": "2020-05-01",
+            "type": "Microsoft.Network/azureFirewalls",
+            "name": "[parameters('azureFirewallName')]",
+            "location": "[parameters('location')]",
+            "zones": "[parameters('zones')]",
+            "dependsOn": [
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/publicIpAddresses', parameters('managementPublicIpAddressName'))]",
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+                "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/firewallPolicies', 'oo')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[parameters('publicIpAddressName')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), 'AzureFirewallSubnet')]"
+                            },
+                            "publicIpAddress": {
+                                "id": "[parameters('publicIpAddressId')]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "tier": "[parameters('azureFirewallTier')]"
+                },
+                "managementIpConfiguration": {
+                    "name": "[parameters('managementPublicIpAddressName')]",
+                    "properties": {
+                        "subnet": {
+                            "id": "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), 'AzureFirewallManagementSubnet')]"
+                        },
+                        "publicIPAddress": {
+                            "id": "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/publicIpAddresses', parameters('managementPublicIpAddressName'))]"
+                        }
+                    }
+                },
+                "firewallPolicy": {
+                    "id": "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/firewallPolicies', 'oo')]"
+                }
+            },
+            "tags": {}
+        }
+    ]
 }
