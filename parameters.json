@@ -1,0 +1,65 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "centralindia"
+        },
+        "resourceGroup": {
+            "value": "piyush-rg"
+        },
+        "azureFirewallName": {
+            "value": "test"
+        },
+        "azureFirewallTier": {
+            "value": "Basic"
+        },
+        "vnetName": {
+            "value": "test"
+        },
+        "vnetAddressSpace": {
+            "value": "10.0.0.0/16"
+        },
+        "vnetAddressSpaceV6": {
+            "value": ""
+        },
+        "subnetAddressSpace": {
+            "value": "10.0.0.0/24"
+        },
+        "subnetAddressSpaceV6": {
+            "value": ""
+        },
+        "azureFirewallManagementSubnet": {
+            "value": "AzureFirewallManagementSubnet"
+        },
+        "tunnelingSubnetAddressSpace": {
+            "value": "10.0.1.0/24"
+        },
+        "zones": {
+            "value": [
+                "1",
+                "2",
+                "3"
+            ]
+        },
+        "managementPublicIpAddressName": {
+            "value": "pip-test-fw-01"
+        },
+        "managementPublicIpZones": {
+            "value": [
+                "1",
+                "2",
+                "3"
+            ]
+        },
+        "publicIpAddressName": {
+            "value": "test-pip-01"
+        },
+        "publicIpAddressId": {
+            "value": "/subscriptions/0b1f7848-73ed-4735-80dd-f82f674f942d/resourceGroups/piyush-rg/providers/Microsoft.Network/publicIPAddresses/test-pip-01"
+        },
+        "publicIpV6AddressName": {
+            "value": "IpV6Conf"
+        }
+    }
+}
